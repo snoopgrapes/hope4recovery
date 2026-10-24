@@ -93,17 +93,25 @@ function urlBase64ToUint8Array(b64) {
 }
 
 async function enableReminders() {
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') {
-    alert('Reminders are off. You can change this in your browser settings.');
-    return;
+  const out = document.getElementById('sub-out');
+  try {
+    out.value = 'Step 1: asking permission...';
+    const permission = await Notification.requestPermission();
+    out.value = 'Permission: ' + permission;
+    if (permission !== 'granted') return;
+
+    out.value += '\nStep 2: waiting for service worker...';
+    const reg = await navigator.serviceWorker.ready;
+
+    out.value += '\nStep 3: subscribing...';
+    const sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+    });
+    out.value = JSON.stringify(sub);
+  } catch (err) {
+    out.value += '\nERROR: ' + err.name + ': ' + err.message;
   }
-  const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-  });
-  document.getElementById('sub-out').value = JSON.stringify(sub);
 }
 
 document.getElementById('reminder-btn').addEventListener('click', enableReminders);

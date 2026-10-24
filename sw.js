@@ -1,4 +1,4 @@
-const CACHE = 'hope4-v3';
+const CACHE = 'hope4-v4';
 const ASSETS = [
   './',
   './index.html',

@@ -83,3 +83,27 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js');
   });
 }
+
+const VAPID_PUBLIC_KEY = 'BMSYaNgEQ9nh5CQs8CO9DvIt_t0GiPpQIgV9E5fszozoV6sQj_rZtG6RyrsXpFLXeHmO5YsNZ_gYXc0bX5bSkGY';
+
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function enableReminders() {
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    alert('Reminders are off. You can change this in your browser settings.');
+    return;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+  console.log(JSON.stringify(sub));
+}
+
+document.getElementById('reminder-btn').addEventListener('click', enableReminders);

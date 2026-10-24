@@ -1,0 +1,95 @@
+Part 2: Keys and a tools folder (30 minutes)
+Make a folder outside your repo, such as hope4-tools, and run npm init -y, then npm install web-push.
+Run npx web-push generate-vapid-keys. You get a public and a private key.
+The public key goes in your app code. The private key stays only in hope4-tools and is never committed to GitHub. Anyone with it could send notifications as your app.
+Part 3: Subscribe from the page (1 hour)
+
+Add a “Turn on reminders” button to index.html, then this to app.js:
+
+js
+const VAPID_PUBLIC_KEY = 'PASTE_YOUR_PUBLIC_KEY';
+
+function urlBase64ToUint8Array(b64) {
+  const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+  const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from([...raw].map((c) => c.charCodeAt(0)));
+}
+
+async function enableReminders() {
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    alert('Reminders are off. You can change this in your browser settings.');
+    return;
+  }
+  const reg = await navigator.serviceWorker.ready;
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+  });
+  console.log(JSON.stringify(sub));
+}
+
+document.getElementById('reminder-btn').addEventListener('click', enableReminders);
+
+Ask for permission only after a button tap, never on page load. People refuse prompts they don’t understand, and a refusal is hard to undo.
+
+Part 4: Handle the push in the service worker (30 minutes)
+
+Add to sw.js, and bump the cache to hope4-v3 (the Lesson 3 trap):
+
+js
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Hope 4', {
+      body: data.body || 'Time for your check-in',
+      icon: './icons/icon-192.png',
+      tag: 'checkin',
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((list) =>
+      list.length ? list[0].focus() : clients.openWindow('./')
+    )
+  );
+});
+Part 5: Send a test from your laptop (1 hour)
+In your browser console on the laptop (localhost counts as secure), tap the button and copy the logged subscription JSON into hope4-tools/subscription.json.
+Create hope4-tools/send.js:
+js
+const webpush = require('web-push');
+webpush.setVapidDetails(
+  'mailto:YOUR-EMAIL',
+  process.env.VAPID_PUBLIC,
+  process.env.VAPID_PRIVATE
+);
+webpush
+  .sendNotification(
+    require('./subscription.json'),
+    JSON.stringify({ title: 'Hope 4', body: 'Time for your check-in' })
+  )
+  .then(() => console.log('sent'))
+  .catch(console.error);
+In PowerShell, from hope4-tools:
+   $env:VAPID_PUBLIC="your-public-key"
+   $env:VAPID_PRIVATE="your-private-key"
+   node send.js
+A notification should appear on the laptop.
+
+Then repeat on your phone. Push your changes to GitHub Pages, open the installed app, and tap the button. Chrome will ask for permission, and on newer Android versions the system may ask too. To get that phone’s subscription to your laptop, temporarily show the JSON in a <textarea> on the page, copy it, send it to yourself, and paste it into subscription.json. Remove that textarea afterwards. Close the app fully and run node send.js again. The notification should arrive on your phone.
+
+Check yourself
+A notification reaches your phone with the app closed.
+Tapping it opens the app.
+You can explain why the private key must never be in the repo, and why the subscription endpoint should be treated as personal data.
+You can name the four hops from your script to the phone.
+Troubleshooting
+No prompt on phone: check the app address is HTTPS and that notifications aren’t blocked for the site in Chrome’s site settings.
+410 or 404 from the send script: the subscription has expired, so subscribe again.
+Nothing arrives, no error: check Android battery optimisation isn’t restricting Chrome, and that Do Not Disturb is off.
+
+Tell me how it goes, and paste any errors you hit. Next is Lesson 5: scheduling and privacy. We’ll put the sender on a free scheduled host so reminders go out automatically, and decide what the app should and shouldn’t store about people.

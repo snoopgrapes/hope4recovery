@@ -32,3 +32,23 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => cached || fetch(event.request))
   );
 });
+
+self.addEventListener('push', (event) => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Hope 4', {
+      body: data.body || 'Time for your check-in',
+      icon: './icons/icon-192.png',
+      tag: 'checkin',
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((list) =>
+      list.length ? list[0].focus() : clients.openWindow('./')
+    )
+  );
+});

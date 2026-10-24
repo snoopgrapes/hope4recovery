@@ -103,7 +103,7 @@ async function enableReminders() {
     userVisibleOnly: true,
     applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
   });
-  console.log(JSON.stringify(sub));
+  document.getElementById('sub-out').value = JSON.stringify(sub);
 }
 
 document.getElementById('reminder-btn').addEventListener('click', enableReminders);

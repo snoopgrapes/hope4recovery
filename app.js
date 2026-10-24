@@ -77,3 +77,9 @@ function showEncouragingFeedback(entry) {
         badge.classList.remove('hidden');
     }
 }
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js');
+  });
+}

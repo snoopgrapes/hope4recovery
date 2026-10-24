@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <title>Hope 4 Recovery</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main class="app-card">
+        <header class="app-header">
+            <span class="badge font-bold">One Day at a Time</span>
+            <h1>Hope 4 Recovery</h1>
+            <p>Welcome back. Take a moment for yourself today.</p>
+        </header>
+
+        <section class="app-body">
+            <!-- Daily Stats -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-label">Total Check-ins</span>
+                    <span id="stat-total" class="stat-value">0</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">Streak</span>
+                    <span id="stat-streak" class="stat-value">0 Days</span>
+                </div>
+            </div>
+
+            <!-- Confirmation Badge -->
+            <div id="checkin-status-badge" class="status-badge hidden">
+                <strong id="status-title">Check-in Completed!</strong>
+                <p id="status-message">Great job showing up for yourself today.</p>
+                <small id="status-time"></small>
+            </div>
+
+            <!-- Main Interactive Check-in Button -->
+            <button id="btn-checkin" class="btn-primary" onclick="handleCheckIn()">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                </svg>
+                <span>Today’s check-in</span>
+            </button>
+
+            <!-- Check-in History -->
+            <div class="history-section">
+                <h3>Recent Check-ins</h3>
+                <div id="history-container">
+                    <p id="empty-history" class="empty-msg">No check-ins recorded yet.</p>
+                    <ul id="history-list"></ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const CACHE = 'hope4-v1';
+const CACHE = 'hope4-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -25,11 +25,34 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: answer from cache first, fall back to network
+// Fetch: network first for navigation, stale-while-revalidate for everything else
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  // Pages: network first, cache as fallback
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(event.request, copy));
+          return res;
+        })
+        .catch(() => caches.match(event.request).then((r) => r || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // Everything else: serve from cache, refresh in the background
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request))
+    caches.match(event.request).then((cached) => {
+      const network = fetch(event.request).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(event.request, copy));
+        return res;
+      });
+      return cached || network;
+    })
   );
 });
 
